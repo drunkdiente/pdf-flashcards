@@ -18,3 +18,7 @@ fake_decks_db = [
         "cards": []
     }
 ]
+
+fake_users_db = {}
+
+blacklist_db = set()
