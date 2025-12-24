@@ -1,26 +1,26 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from uuid import UUID, uuid4
 
-# Модель одной карточки (Вопрос-Ответ)
+# --- CARDS ---
 class CardBase(BaseModel):
     question: str
     answer: str
 
-class Card(CardBase):
-    id: str = str(uuid4())
+class CardCreate(CardBase):
+    pass
 
-# Модель колоды (Название + список карточек)
+class Card(CardBase):
+    id: str
+    
+# --- DECKS ---
 class DeckBase(BaseModel):
     title: str
     description: Optional[str] = None
 
 class DeckCreate(DeckBase):
-    pass
+    # ВАЖНО: Разрешаем принимать список карточек при создании
+    cards: List[CardCreate] = []
 
 class Deck(DeckBase):
     id: str
     cards: List[Card] = []
-
-    class Config:
-        from_attributes = True

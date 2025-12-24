@@ -1,70 +1,58 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from app.schemas import Deck, DeckCreate, Card
-from app.db import fake_decks_db
+from app.db import fake_decks_db # Используем нашу in-memory базу
 import uuid
 
 router = APIRouter()
 
-# --- CREATE ---
-@router.post("/", response_model=Deck, status_code=status.HTTP_201_CREATED, tags=["Decks"])
-async def create_deck(deck: DeckCreate):
-    """Создать новую пустую колоду вручную"""
-    new_deck = deck.dict()
-    new_deck["id"] = str(uuid.uuid4())
-    new_deck["cards"] = []
-    fake_decks_db.append(new_deck)
-    return new_deck
-
-# --- READ (All) ---
-@router.get("/", response_model=List[Deck], tags=["Decks"])
+@router.get("/", response_model=List[Deck])
 async def get_decks():
-    """Получить список всех колод пользователя для Dashboard"""
-    return fake_decks_db
+    """Получить все колоды"""
+    # Преобразуем словарь в список
+    return list(fake_decks_db)
 
-# --- READ (One) ---
-@router.get("/{deck_id}", response_model=Deck, tags=["Decks"])
+@router.get("/{deck_id}", response_model=Deck)
 async def get_deck(deck_id: str):
-    """
-    Получить конкретную колоду для режима обучения 
-    или редактирования.
-    """
+    """Получить одну колоду по ID"""
     for deck in fake_decks_db:
         if deck["id"] == deck_id:
             return deck
     raise HTTPException(status_code=404, detail="Deck not found")
 
-# --- UPDATE ---
-@router.put("/{deck_id}", response_model=Deck, tags=["Decks"])
-async def update_deck(deck_id: str, updated_deck: DeckCreate):
-    """Редактирование названия или описания колоды."""
-    for i, deck in enumerate(fake_decks_db):
-        if deck["id"] == deck_id:
-            fake_decks_db[i]["title"] = updated_deck.title
-            fake_decks_db[i]["description"] = updated_deck.description
-            return fake_decks_db[i]
-    raise HTTPException(status_code=404, detail="Deck not found")
+@router.post("/", response_model=Deck)
+async def create_deck(deck_data: DeckCreate):
+    """Создать новую колоду вместе с карточками"""
+    
+    # 1. Генерируем ID для новой колоды
+    new_deck_id = str(uuid.uuid4())
+    
+    # 2. Обрабатываем карточки (им тоже нужны ID)
+    processed_cards = []
+    for card_data in deck_data.cards:
+        processed_cards.append({
+            "id": str(uuid.uuid4()),
+            "question": card_data.question,
+            "answer": card_data.answer
+        })
+    
+    # 3. Собираем объект колоды
+    new_deck = {
+        "id": new_deck_id,
+        "title": deck_data.title,
+        "description": deck_data.description,
+        "cards": processed_cards
+    }
+    
+    # 4. Сохраняем в "базу"
+    fake_decks_db.append(new_deck)
+    
+    return new_deck
 
-# --- DELETE ---
-@router.delete("/{deck_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Decks"])
+@router.delete("/{deck_id}")
 async def delete_deck(deck_id: str):
-    """Удаление старой колоды."""
-    for i, deck in enumerate(fake_decks_db):
-        if deck["id"] == deck_id:
-            del fake_decks_db[i]
-            return
-    raise HTTPException(status_code=404, detail="Deck not found")
-
-# --- Добавление карточки в колоду (Sub-resource) ---
-@router.post("/{deck_id}/cards", response_model=Card, tags=["Cards"])
-async def add_card_to_deck(deck_id: str, card: Card):
-    """Добавление новой карточки в существующую колоду."""
-    for deck in fake_decks_db:
-        if deck["id"] == deck_id:
-            new_card = card.dict()
-            # Генерируем ID если не передан
-            if not new_card.get("id"):
-                new_card["id"] = str(uuid.uuid4())
-            deck["cards"].append(new_card)
-            return new_card
-    raise HTTPException(status_code=404, detail="Deck not found")
+    """Удалить колоду"""
+    global fake_decks_db
+    # Фильтруем список, оставляя все колоды КРОМЕ той, которую удаляем
+    fake_decks_db = [d for d in fake_decks_db if d["id"] != deck_id]
+    return {"message": "Deck deleted"}
