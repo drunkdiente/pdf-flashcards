@@ -59,21 +59,21 @@ export default function Upload() {
     formData.append('file', file);
 
     try {
-      // Отправляем PDF на ML-обработку
       const response = await api.post('/api/upload/pdf', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      
+      const token = localStorage.getItem('token');
+      const generatedDeck = response.data;
 
-      navigate('/deck/edit', { state: { deck: response.data } });
-      
-      // Сервер вернул готовую колоду (preview). 
-      // Мы можем сохранить её в state и перенаправить на предпросмотр.
-      // Пока просто выведем в консоль и перейдем на dashboard (или создадим страницу просмотра)
-      console.log('Сгенерированная колода:', response.data);
-      
-      // В реальном приложении здесь мы бы перенаправили на страницу редактирования колоды
-      // navigate(`/deck/${response.data.id}/edit`, { state: { deck: response.data } });
-      alert("Колода успешно сгенерирована! (Пока просто alert)");
+      if (token) {
+        // Если вошел: идем в редактор (как раньше)
+        navigate('/deck/edit', { state: { deck: generatedDeck } });
+      } else {
+        // Если ГОСТЬ: идем сразу учить (Preview Mode)
+        // Добавляем флаг preview: true, чтобы скрыть лишние кнопки
+        navigate('/study/preview', { state: { deck: generatedDeck, preview: true } });
+      }
       
     } catch (err) {
       console.error(err);

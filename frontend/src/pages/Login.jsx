@@ -11,20 +11,20 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // FormData нужен, так как FastAPI OAuth2 ожидает form-data, а не JSON
       const formData = new FormData();
-      formData.append('username', email); // FastAPI ожидает поле username
+      formData.append('username', email);
       formData.append('password', password);
 
       const response = await api.post('/api/auth/login', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 
-      // Сохраняем токен
+      // Сохраняем токен И РОЛЬ
       localStorage.setItem('token', response.data.access_token);
+      localStorage.setItem('role', response.data.role); // <-- Важно для RBAC
       
-      // ВАЖНО: Используем это вместо navigate, чтобы Header обновился (перерисовался)
-      window.location.href = '/my-decks';
+      // Используем window.location для полного обновления хедера
+      window.location.href = response.data.role === 'admin' ? '/admin/users' : '/my-decks';
     } catch (err) {
       setError('Ошибка входа. Проверьте почту и пароль.');
       console.error(err);
@@ -70,6 +70,10 @@ export default function Login() {
             Войти
           </button>
         </form>
+        
+        <div className="mt-4 text-center text-xs text-gray-400">
+            <p>Admin Login: admin@example.com / admin123</p>
+        </div>
       </div>
     </div>
   );

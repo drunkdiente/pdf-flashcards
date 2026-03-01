@@ -1,14 +1,15 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, LogOut, User } from 'lucide-react';
+import { BookOpen, LogOut, User, Shield } from 'lucide-react';
 
 export default function Header() {
   const navigate = useNavigate();
-  const location = useLocation(); // Чтобы обновлять хедер при смене страниц
+  const location = useLocation(); 
   const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role'); // Получаем роль
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    // Используем жесткую перезагрузку или переход, чтобы сбросить состояние
+    localStorage.removeItem('role'); // Очищаем роль
     navigate('/login');
   };
 
@@ -25,8 +26,14 @@ export default function Header() {
       {/* Навигация */}
       <div className="flex items-center gap-4">
         {token ? (
-          // --- ЕСЛИ АВТОРИЗОВАН ---
           <>
+             {/* ССЫЛКА ДЛЯ АДМИНА */}
+            {role === 'admin' && (
+                <Link to="/admin/users" className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium transition text-sm bg-purple-50 px-3 py-1.5 rounded-full">
+                    <Shield size={16} /> Админка
+                </Link>
+            )}
+
             <Link to="/my-decks" className="text-gray-600 hover:text-brand-dark font-medium transition hidden sm:block">
               Мои Шпаргалки
             </Link>
@@ -42,7 +49,6 @@ export default function Header() {
             </button>
           </>
         ) : (
-          // --- ЕСЛИ ГОСТЬ ---
           <>
             <Link 
               to="/login"

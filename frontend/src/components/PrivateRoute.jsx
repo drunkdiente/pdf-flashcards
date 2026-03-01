@@ -1,15 +1,21 @@
 import { Navigate, Outlet } from 'react-router-dom';
 
-const PrivateRoute = () => {
+const PrivateRoute = ({ allowedRoles }) => {
   const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('role'); // Получаем роль
 
-  // Если токена нет, перенаправляем на логин
-  // replace означает, что пользователь не сможет нажать "Назад" и вернуться на защищенную страницу
+  // 1. Если токена нет, перенаправляем на логин
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  // Если токен есть, рендерим дочерние элементы (Outlet)
+  // 2. Если указаны разрешенные роли, и роль пользователя не подходит
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    // Можно перенаправить на главную или страницу "Доступ запрещен"
+    return <Navigate to="/" replace />;
+  }
+
+  // 3. Доступ разрешен
   return <Outlet />;
 };
 

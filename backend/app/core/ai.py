@@ -1,44 +1,31 @@
-import os
 import json
-from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from typing import List, Dict
 
-# Загружаем переменные окружения
-load_dotenv()
-
-# Инициализируем клиент Groq
-# Важно: используем base_url для Groq
+# Настраиваем клиент на локальный адрес Ollama
 client = AsyncOpenAI(
-    base_url="https://api.groq.com/openai/v1",
-    api_key=os.getenv("GROQ_API_KEY")
+    base_url="http://127.0.0.1:11434/v1",
+    api_key="ollama"
 )
 
 async def generate_flashcards_from_text(text: str) -> List[Dict[str, str]]:
     """
-    Асинхронно генерирует карточки из текста с помощью Groq (Llama 3).
+    Генерирует карточки локально через Ollama (Llama 3).
     """
-    # Если текст пустой, возвращаем пустой список
     if not text:
         return []
 
-    # Обрезаем текст, так как у моделей есть лимит контекста (хотя у Llama он большой)
-    # 20 000 символов - безопасный лимит для бесплатного тарифа
-    truncated_text = text[:20000]
+    # Обрезаем текст, чтобы не перегрузить локальную модель (6000 символов - безопасно)
+    truncated_text = text[:6000]
 
     system_prompt = """
-    Ты профессиональный преподаватель. Твоя задача — создать эффективные учебные карточки (flashcards) на основе присланного текста.
+    Ты профессиональный преподаватель. Создай учебные карточки из текста.
+    1. Выдели главные факты.
+    2. Создай пары "question" и "answer".
+    3. Ответы должны быть краткими (1-2 предложения).
+    4. Верни ТОЛЬКО валидный JSON. Никаких вступлений.
     
-    Требования:
-    1. Выдели ключевые понятия, даты, определения и факты.
-    2. Создай пары "question" (вопрос) - "answer" (ответ).
-    3. Ответы должны быть точными и краткими (1-2 предложения).
-    4. Вопросы должны быть понятными.
-    5. Используй язык оригинала текста (если текст на русском — вопросы на русском).
-    
-    ВАЖНО: ВЕРНИ РЕЗУЛЬТАТ СТРОГО В ФОРМАТЕ JSON. 
-    Не пиши никаких вступлений типа "Вот ваши карточки". Только чистый JSON.
-    Структура:
+    Формат JSON:
     {
         "cards": [
             {"question": "Вопрос 1", "answer": "Ответ 1"},
@@ -49,22 +36,20 @@ async def generate_flashcards_from_text(text: str) -> List[Dict[str, str]]:
 
     try:
         response = await client.chat.completions.create(
-            # Модель Llama 3.3 70B - очень мощная и доступна бесплатно в Groq
-            model="llama-3.3-70b-versatile",
+            model="llama3.2",  # Имя модели, которую вы скачали
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Текст для обработки:\n\n{truncated_text}"}
+                {"role": "user", "content": f"Текст для обработки:\n{truncated_text}"}
             ],
-            # Включаем JSON mode, чтобы модель не ошибалась с форматом
             response_format={"type": "json_object"}, 
             temperature=0.3,
         )
 
-        # Парсим ответ
         content = response.choices[0].message.content
         data = json.loads(content)
         return data.get("cards", [])
 
     except Exception as e:
-        print(f"Error calling Groq API: {e}")
+        print(f"Error calling Local Ollama: {e}")
+        # Если локальная модель упала, вернем пустой список или ошибку
         return []

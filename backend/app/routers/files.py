@@ -48,6 +48,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     new_deck = Deck(
         id=str(uuid.uuid4()),
+        owner_id="temp", # Добавлено недостающее поле-заглушка для прохождения валидации Pydantic
         title=f"Конспект: {file.filename}",
         description="Сгенерировано AI",
         cards=cards_objects

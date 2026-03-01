@@ -1,0 +1,1999 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.env.example
+.gitignore
+backend/app/__init__.py
+backend/app/core/ai.py
+backend/app/core/security.py
+backend/app/db.py
+backend/app/routers/__init__.py
+backend/app/routers/auth.py
+backend/app/routers/decks.py
+backend/app/routers/files.py
+backend/app/routers/system.py
+backend/app/schemas.py
+backend/main.py
+backend/requirements.txt
+backend/test_ai.py
+frontend.rar
+frontend/.gitignore
+frontend/eslint.config.js
+frontend/index.html
+frontend/package.json
+frontend/postcss.config.js
+frontend/public/vite.svg
+frontend/README.md
+frontend/src/api.js
+frontend/src/App.css
+frontend/src/App.jsx
+frontend/src/assets/react.svg
+frontend/src/components/Header.jsx
+frontend/src/components/PrivateRoute.jsx
+frontend/src/index.css
+frontend/src/main.jsx
+frontend/src/pages/AdminUsers.jsx
+frontend/src/pages/DeckEdit.jsx
+frontend/src/pages/Login.jsx
+frontend/src/pages/MyDecks.jsx
+frontend/src/pages/Register.jsx
+frontend/src/pages/StudyMode.jsx
+frontend/src/pages/Upload.jsx
+frontend/tailwind.config.js
+frontend/vite.config.js
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="frontend/src/pages/AdminUsers.jsx">
+import { useEffect, useState } from 'react';
+import { Shield, User } from 'lucide-react';
+import api from '../api';
+
+export default function AdminUsers() {
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get('/api/auth/users');
+        setUsers(response.data);
+      } catch (err) {
+        setError('Не удалось загрузить пользователей. ' + (err.response?.data?.detail || ''));
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 bg-brand-dark rounded-full text-white">
+          <Shield size={24} />
+        </div>
+        <h1 className="text-3xl font-bold text-gray-800">Панель администратора</h1>
+      </div>
+
+      {error && <div className="p-4 mb-4 bg-red-50 text-red-600 rounded-lg">{error}</div>}
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <h2 className="font-semibold text-gray-700">Пользователи ({users.length})</h2>
+        </div>
+        
+        <div className="divide-y divide-gray-100">
+          {users.map((user) => (
+            <div key={user.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition">
+              <div className="flex items-center gap-4">
+                <div className={`p-2 rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'}`}>
+                    <User size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{user.email}</p>
+                  <p className="text-sm text-gray-500">ID: {user.id}</p>
+                </div>
+              </div>
+              
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide 
+                ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>
+                {user.role}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path=".gitignore">
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+</file>
+
+<file path="backend/app/__init__.py">
+
+</file>
+
+<file path="backend/app/core/ai.py">
+import json
+from openai import AsyncOpenAI
+from typing import List, Dict
+
+# Настраиваем клиент на локальный адрес Ollama
+client = AsyncOpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama"  # Ключ не нужен, но поле обязательно
+)
+
+async def generate_flashcards_from_text(text: str) -> List[Dict[str, str]]:
+    """
+    Генерирует карточки локально через Ollama (Llama 3).
+    """
+    if not text:
+        return []
+
+    # Обрезаем текст, чтобы не перегрузить локальную модель (6000 символов - безопасно)
+    truncated_text = text[:6000]
+
+    system_prompt = """
+    Ты профессиональный преподаватель. Создай учебные карточки из текста.
+    1. Выдели главные факты.
+    2. Создай пары "question" и "answer".
+    3. Ответы должны быть краткими (1-2 предложения).
+    4. Верни ТОЛЬКО валидный JSON. Никаких вступлений.
+    
+    Формат JSON:
+    {
+        "cards": [
+            {"question": "Вопрос 1", "answer": "Ответ 1"},
+            {"question": "Вопрос 2", "answer": "Ответ 2"}
+        ]
+    }
+    """
+
+    try:
+        response = await client.chat.completions.create(
+            model="llama3.2",  # Имя модели, которую вы скачали
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Текст для обработки:\n{truncated_text}"}
+            ],
+            response_format={"type": "json_object"}, 
+            temperature=0.3,
+        )
+
+        content = response.choices[0].message.content
+        data = json.loads(content)
+        return data.get("cards", [])
+
+    except Exception as e:
+        print(f"Error calling Local Ollama: {e}")
+        # Если локальная модель упала, вернем пустой список или ошибку
+        return []
+</file>
+
+<file path="backend/app/core/security.py">
+from datetime import datetime, timedelta
+from typing import Optional, Union, Any
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from fastapi import HTTPException, status
+
+# КОНФИГУРАЦИЯ (В продакшене брать из .env)
+SECRET_KEY = "YOUR_SUPER_SECRET_KEY_CHANGE_ME"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def create_token(subject: Union[str, Any], expires_delta: timedelta, token_type: str = "access") -> str:
+    encode = {"sub": str(subject), "type": token_type}
+    expire = datetime.utcnow() + expires_delta
+    
+    # Стандартные поля JWT
+    encode.update({"exp": expire, "iat": datetime.utcnow()})
+    
+    encoded_jwt = jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def create_access_token(subject: Union[str, Any]) -> str:
+    return create_token(subject, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), "access")
+
+def create_refresh_token(subject: Union[str, Any]) -> str:
+    return create_token(subject, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), "refresh")
+
+def decode_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+</file>
+
+<file path="backend/app/routers/__init__.py">
+
+</file>
+
+<file path="backend/app/routers/auth.py">
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
+from pydantic import BaseModel, EmailStr
+from app.core.security import (
+    get_password_hash, verify_password, create_access_token, 
+    create_refresh_token, decode_token
+)
+from app.db import fake_users_db, blacklist_db 
+from typing import Optional, List
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from app.schemas import UserAuth, UserOut, TokenSchema # Импортируем обновленные схемы
+
+limiter = Limiter(key_func=get_remote_address)
+router = APIRouter()
+
+# --- Middleware / Dependency ---
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    # 1. Проверка на черный список
+    if token in blacklist_db:
+        raise HTTPException(status_code=401, detail="Token revoked")
+    
+    # 2. Декодирование
+    payload = decode_token(token)
+    if not payload or payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    user_email = payload.get("sub")
+    user = fake_users_db.get(user_email)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return user
+
+async def get_current_admin(current_user: dict = Depends(get_current_user)):
+    """Проверка прав администратора (RBAC)"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Not enough privileges. Admin role required."
+        )
+    return current_user
+
+# --- Endpoints ---
+
+@router.post("/register", status_code=201)
+async def register(user_data: UserAuth):
+    if user_data.email in fake_users_db:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    hashed_pw = get_password_hash(user_data.password)
+    fake_users_db[user_data.email] = {
+        "id": str(len(fake_users_db) + 1),
+        "email": user_data.email,
+        "hashed_password": hashed_pw,
+        "role": "user" # По умолчанию роль - пользователь
+    }
+    return {"message": "User created successfully"}
+
+@router.post("/login", response_model=TokenSchema)
+@limiter.limit("5/minute")
+async def login(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
+    user = fake_users_db.get(form_data.username)
+    
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
+    
+    access_token = create_access_token(subject=user["email"])
+    refresh_token = create_refresh_token(subject=user["email"])
+    
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    # Возвращаем роль, чтобы фронтенд мог адаптировать интерфейс
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "role": user.get("role", "user")
+    }
+
+@router.post("/refresh", response_model=TokenSchema)
+async def refresh_token(request: Request, response: Response):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+        
+    payload = decode_token(refresh_token)
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        
+    user_email = payload.get("sub")
+    user = fake_users_db.get(user_email)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    new_access_token = create_access_token(subject=user_email)
+    
+    return {
+        "access_token": new_access_token, 
+        "token_type": "bearer",
+        "role": user.get("role", "user")
+    }
+
+@router.post("/logout")
+async def logout(response: Response, token: str = Depends(oauth2_scheme)):
+    blacklist_db.add(token)
+    response.delete_cookie("refresh_token")
+    return {"message": "Logged out successfully"}
+
+@router.get("/me", response_model=UserOut)
+async def read_users_me(current_user: dict = Depends(get_current_user)):
+    return current_user
+
+# --- ADMIN ENDPOINTS ---
+@router.get("/users", response_model=List[UserOut])
+async def read_all_users(admin_user: dict = Depends(get_current_admin)):
+    """
+    Только для администраторов: получить список всех пользователей.
+    """
+    # Преобразуем словарь users_db в список
+    return list(fake_users_db.values())
+</file>
+
+<file path="backend/app/routers/system.py">
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/healthcheck", tags=["System"])
+async def health_check():
+    """
+    Проверка работоспособности сервера.
+    """
+    return {"status": "ok", "service": "flashcards-backend"}
+</file>
+
+<file path="backend/test_ai.py">
+import os
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv()
+
+def test_connection():
+    api_key = os.getenv("GOOGLE_API_KEY")
+    client = genai.Client(api_key=api_key)
+
+    print("Попытка получить список моделей...")
+    try:
+        models = client.models.list()
+        print("УСПЕХ! Найдены модели:")
+        for m in models:
+            # Просто печатаем имя, без сложных проверок
+            print(f" - {m.name}")
+                
+    except Exception as e:
+        print(f"\nОШИБКА: {e}")
+
+if __name__ == "__main__":
+    test_connection()
+</file>
+
+<file path="frontend/.gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
+<file path="frontend/eslint.config.js">
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+</file>
+
+<file path="frontend/postcss.config.js">
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+</file>
+
+<file path="frontend/public/vite.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
+</file>
+
+<file path="frontend/README.md">
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+</file>
+
+<file path="frontend/src/api.js">
+import axios from 'axios';
+
+const API_URL = 'http://127.0.0.1:8000';
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 1. Request Interceptor (уже был): Добавляет токен в запросы
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// 2. Response Interceptor (НОВЫЙ): Ловит ошибки 401
+api.interceptors.response.use(
+  (response) => response, // Если всё ок, просто возвращаем ответ
+  (error) => {
+    // Если ошибка 401 (нет доступа), значит токен неверный или истек
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token'); // Удаляем плохой токен
+      window.location.href = '/login';  // Жестко перекидываем на логин
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+</file>
+
+<file path="frontend/src/App.css">
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+</file>
+
+<file path="frontend/src/assets/react.svg">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+</file>
+
+<file path="frontend/src/components/Header.jsx">
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { BookOpen, LogOut, User, Shield } from 'lucide-react';
+
+export default function Header() {
+  const navigate = useNavigate();
+  const location = useLocation(); 
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role'); // Получаем роль
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role'); // Очищаем роль
+    navigate('/login');
+  };
+
+  return (
+    <header className="flex items-center justify-between px-6 md:px-12 py-4 border-b border-gray-100 bg-white sticky top-0 z-50">
+      {/* Логотип */}
+      <Link to="/" className="flex items-center gap-2 text-gray-800 hover:text-brand-dark transition group">
+        <div className="bg-brand-light p-2 rounded-lg group-hover:bg-brand-DEFAULT transition duration-300">
+             <BookOpen className="w-6 h-6 text-brand-dark group-hover:text-white transition" />
+        </div>
+        <span className="font-bold text-xl hidden sm:block tracking-tight">Flashcards AI</span>
+      </Link>
+
+      {/* Навигация */}
+      <div className="flex items-center gap-4">
+        {token ? (
+          <>
+             {/* ССЫЛКА ДЛЯ АДМИНА */}
+            {role === 'admin' && (
+                <Link to="/admin/users" className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium transition text-sm bg-purple-50 px-3 py-1.5 rounded-full">
+                    <Shield size={16} /> Админка
+                </Link>
+            )}
+
+            <Link to="/my-decks" className="text-gray-600 hover:text-brand-dark font-medium transition hidden sm:block">
+              Мои Шпаргалки
+            </Link>
+            
+            <div className="h-6 w-px bg-gray-200 mx-2 hidden sm:block"></div>
+
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition text-sm font-medium"
+            >
+              <LogOut size={18} /> 
+              <span className="hidden sm:inline">Выйти</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <Link 
+              to="/login"
+              className="px-4 py-2 text-gray-600 hover:text-brand-dark font-medium transition"
+            >
+              Войти
+            </Link>
+            
+            <Link 
+              to="/register"
+              className="px-5 py-2 bg-brand-dark text-white rounded-full hover:bg-brand-dark/90 transition font-medium shadow-sm flex items-center gap-2"
+            >
+              <User size={18} />
+              Регистрация
+            </Link>
+          </>
+        )}
+      </div>
+    </header>
+  );
+}
+</file>
+
+<file path="frontend/src/components/PrivateRoute.jsx">
+import { Navigate, Outlet } from 'react-router-dom';
+
+const PrivateRoute = ({ allowedRoles }) => {
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('role'); // Получаем роль
+
+  // 1. Если токена нет, перенаправляем на логин
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 2. Если указаны разрешенные роли, и роль пользователя не подходит
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    // Можно перенаправить на главную или страницу "Доступ запрещен"
+    return <Navigate to="/" replace />;
+  }
+
+  // 3. Доступ разрешен
+  return <Outlet />;
+};
+
+export default PrivateRoute;
+</file>
+
+<file path="frontend/src/main.jsx">
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+</file>
+
+<file path="frontend/src/pages/DeckEdit.jsx">
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import api from '../api';
+
+export default function DeckEdit() {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  
+  // Состояние колоды
+  const [deck, setDeck] = useState(state?.deck || null);
+  // Индекс выбранной карточки для редактирования
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  // Если пришли на страницу без данных (например, обновили страницу), возвращаем назад
+  useEffect(() => {
+    if (!state?.deck) {
+      navigate('/');
+    }
+  }, [state, navigate]);
+
+  if (!deck) return null;
+
+  const currentCard = deck.cards[selectedIndex];
+
+  // Обновление текста вопроса/ответа
+  const updateCard = (field, value) => {
+    const updatedCards = [...deck.cards];
+    updatedCards[selectedIndex] = { ...currentCard, [field]: value };
+    setDeck({ ...deck, cards: updatedCards });
+  };
+
+  // Сохранение колоды в базу данных
+  const handleSaveDeck = async () => {
+    try {
+      setLoading(true);
+      // Если у колоды уже есть ID в базе, делаем PUT, если новая - POST
+      // Но пока API у нас простой, предположим создание новой
+      await api.post('/api/decks/', deck);
+      alert('Колода успешно сохранена!');
+      navigate('/my-decks'); // Позже создадим эту страницу
+    } catch (error) {
+      console.error(error);
+      alert('Ошибка при сохранении');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Верхняя панель */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="px-4 py-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition text-sm">
+            Назад
+          </button>
+          <h1 className="text-2xl font-bold text-gray-800">Шпаргалка: {deck.title}</h1>
+        </div>
+        <button 
+          onClick={handleSaveDeck}
+          disabled={loading}
+          className="flex items-center gap-2 px-6 py-2 bg-brand-dark text-white rounded-full hover:bg-brand-dark/90 transition font-semibold shadow-lg"
+        >
+          <Save size={18} /> {loading ? 'Сохранение...' : 'Сохранить колоду'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        {/* ЛЕВАЯ КОЛОНКА: Список карточек */}
+        <div className="md:col-span-1 space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+          <h3 className="font-semibold text-gray-500 mb-2">Все карточки ({deck.cards.length})</h3>
+          
+          {deck.cards.map((card, idx) => (
+            <div 
+              key={idx}
+              onClick={() => setSelectedIndex(idx)}
+              className={`
+                p-4 rounded-2xl cursor-pointer border transition-all duration-200
+                ${idx === selectedIndex 
+                  ? 'bg-brand-dark text-white border-brand-dark shadow-md' 
+                  : 'bg-white border-gray-200 hover:border-brand-DEFAULT text-gray-700 hover:bg-gray-50'}
+              `}
+            >
+              <p className="font-medium truncate text-sm">
+                {idx + 1}. {card.question || "Новый вопрос"}
+              </p>
+            </div>
+          ))}
+
+          <button 
+            onClick={() => {
+              const newCard = { question: "", answer: "" };
+              setDeck({ ...deck, cards: [...deck.cards, newCard] });
+              setSelectedIndex(deck.cards.length);
+            }}
+            className="w-full py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-brand-DEFAULT hover:text-brand-DEFAULT transition flex items-center justify-center gap-2"
+          >
+            <Plus size={20} /> Добавить карточку
+          </button>
+        </div>
+
+        {/* ПРАВАЯ КОЛОНКА: Редактор */}
+        <div className="md:col-span-2 bg-white rounded-3xl border border-gray-200 p-8 shadow-sm h-fit">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Редактирование карточки</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-lg font-medium text-gray-700 mb-2">Вопрос</label>
+              <textarea
+                value={currentCard?.question}
+                onChange={(e) => updateCard('question', e.target.value)}
+                className="w-full h-32 p-4 bg-brand-light/50 border-none rounded-2xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-brand-DEFAULT resize-none text-lg"
+                placeholder="Введите вопрос..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-medium text-gray-700 mb-2">Ответ</label>
+              <textarea
+                value={currentCard?.answer}
+                onChange={(e) => updateCard('answer', e.target.value)}
+                className="w-full h-32 p-4 bg-brand-light/50 border-none rounded-2xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-brand-DEFAULT resize-none text-lg"
+                placeholder="Введите ответ..."
+              />
+            </div>
+            
+            <div className="flex justify-end pt-4">
+               <button 
+                 onClick={() => {
+                   const newCards = deck.cards.filter((_, i) => i !== selectedIndex);
+                   setDeck({...deck, cards: newCards});
+                   if (selectedIndex > 0) setSelectedIndex(selectedIndex - 1);
+                 }}
+                 className="text-red-500 hover:text-red-700 flex items-center gap-2 text-sm font-medium"
+               >
+                 <Trash2 size={16} /> Удалить эту карточку
+               </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/Login.jsx">
+import { useState } from 'react';
+import api from '../api';
+import { useNavigate } from 'react-router-dom';
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const response = await api.post('/api/auth/login', formData, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      // Сохраняем токен И РОЛЬ
+      localStorage.setItem('token', response.data.access_token);
+      localStorage.setItem('role', response.data.role); // <-- Важно для RBAC
+      
+      // Используем window.location для полного обновления хедера
+      window.location.href = response.data.role === 'admin' ? '/admin/users' : '/my-decks';
+    } catch (err) {
+      setError('Ошибка входа. Проверьте почту и пароль.');
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
+        <h2 className="text-2xl font-bold text-center text-brand-dark mb-6">Вход в систему</h2>
+        
+        {error && <div className="mb-4 p-3 bg-red-100 text-red-600 rounded text-sm text-center">{error}</div>}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-DEFAULT outline-none transition"
+              placeholder="test@example.com"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
+            <input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-DEFAULT outline-none transition"
+              placeholder="********"
+              required
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            className="w-full py-3 bg-brand-DEFAULT hover:bg-brand-dark text-white font-semibold rounded-lg transition duration-200"
+          >
+            Войти
+          </button>
+        </form>
+        
+        <div className="mt-4 text-center text-xs text-gray-400">
+            <p>Admin Login: admin@example.com / admin123</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/MyDecks.jsx">
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Play, Edit, Trash2, Loader2, Plus } from 'lucide-react';
+import api from '../api';
+
+export default function MyDecks() {
+  const [decks, setDecks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDecks();
+  }, []);
+
+  const fetchDecks = async () => {
+    try {
+      const response = await api.get('/api/decks/');
+      setDecks(response.data);
+    } catch (error) {
+      console.error('Ошибка загрузки колод:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (e, id) => {
+    e.preventDefault(); // Чтобы не сработал переход по ссылке
+    if (window.confirm('Вы уверены, что хотите удалить эту колоду?')) {
+      try {
+        await api.delete(`/api/decks/${id}`);
+        setDecks(decks.filter(d => d.id !== id));
+      } catch (error) {
+        console.error('Ошибка удаления:', error);
+      }
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-brand-DEFAULT" size={48} /></div>;
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Мои шпаргалки</h1>
+        <Link 
+          to="/" 
+          className="bg-gray-500 text-white px-6 py-2 rounded-full hover:bg-gray-600 transition flex items-center gap-2"
+        >
+          <Plus size={18} /> Создать новую
+        </Link>
+      </div>
+
+      {decks.length === 0 ? (
+        <div className="text-center py-20 bg-gray-50 rounded-3xl border border-gray-200">
+          <p className="text-xl text-gray-500 mb-4">У вас пока нет шпаргалок</p>
+          <Link to="/" className="text-brand-DEFAULT font-semibold hover:underline">Создать первую сейчас</Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {decks.map((deck) => (
+            <div key={deck.id} className="bg-brand-light/30 border border-brand-light rounded-3xl p-6 hover:shadow-lg transition duration-200 flex flex-col justify-between min-h-[200px]">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2 truncate" title={deck.title}>
+                  {deck.title}
+                </h3>
+                <p className="text-gray-500 text-sm mb-4">
+                  {deck.cards?.length || 0} карточек
+                </p>
+              </div>
+
+              <div className="flex gap-3 mt-4">
+                <Link 
+                  to={`/deck/${deck.id}/study`}
+                  className="flex-1 bg-brand-DEFAULT text-white py-2 rounded-lg font-medium hover:bg-brand-dark transition flex items-center justify-center gap-2"
+                >
+                  <Play size={16} /> Учить
+                </Link>
+                
+                {/* Кнопка редактирования ведет на страницу редактирования, загружая данные по ID */}
+                <button 
+                  onClick={() => navigate('/deck/edit', { state: { deck } })}
+                  className="px-4 py-2 bg-white text-brand-dark border border-brand-DEFAULT/30 rounded-lg hover:bg-brand-light transition"
+                >
+                  <Edit size={16} />
+                </button>
+
+                <button 
+                  onClick={(e) => handleDelete(e, deck.id)}
+                  className="px-4 py-2 bg-white text-red-400 border border-red-100 rounded-lg hover:bg-red-50 hover:text-red-600 transition"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/Register.jsx">
+import { useState } from 'react';
+import api from '../api';
+import { useNavigate, Link } from 'react-router-dom';
+
+export default function Register() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      // Отправляем данные как JSON (по умолчанию в api.js)
+      await api.post('/api/auth/register', { 
+        email, 
+        password 
+      });
+
+      // Если успешно — алерт и перенаправление на вход
+      alert('Регистрация успешна! Теперь войдите в систему.');
+      navigate('/login');
+      
+    } catch (err) {
+      // Пытаемся достать текст ошибки от FastAPI (например, "Email already registered")
+      const errorMsg = err.response?.data?.detail || 'Ошибка регистрации. Попробуйте другой email.';
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-[80vh] bg-white">
+      <div className="w-full max-w-md p-8 bg-white border border-gray-200 rounded-2xl shadow-sm">
+        <h2 className="text-2xl font-bold text-center text-brand-dark mb-2">Создать аккаунт</h2>
+        <p className="text-center text-gray-500 mb-6">Начните создавать умные шпаргалки</p>
+        
+        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-center border border-red-100">{error}</div>}
+
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-DEFAULT outline-none transition"
+              placeholder="name@example.com"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
+            <input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-DEFAULT outline-none transition"
+              placeholder="Придумайте пароль"
+              minLength={6}
+              required
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full py-3 bg-brand-DEFAULT hover:bg-brand-dark text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50"
+          >
+            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+          </button>
+        </form>
+
+        <p className="text-center text-gray-500 text-sm mt-6">
+          Уже есть аккаунт?{' '}
+          <Link to="/login" className="text-brand-dark font-semibold hover:underline">
+            Войти
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/StudyMode.jsx">
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, RotateCw, Loader2, Save } from 'lucide-react';
+import api from '../api';
+
+export default function StudyMode() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation(); // Получаем данные, переданные через navigate
+  
+  // Пытаемся взять колоду из state (для гостей) или null
+  const [deck, setDeck] = useState(location.state?.deck || null);
+  const isPreview = location.state?.preview || false;
+
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [loading, setLoading] = useState(!deck); // Если деки нет, включаем загрузку
+
+  // Загружаем колоду с сервера ТОЛЬКО если у нас нет данных в state и есть ID
+  useEffect(() => {
+    if (!deck && id) {
+      const fetchDeck = async () => {
+        try {
+          const response = await api.get(`/api/decks/${id}`);
+          setDeck(response.data);
+        } catch (error) {
+          console.error("Не удалось загрузить колоду", error);
+          navigate('/my-decks');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchDeck();
+    } else if (!deck && !id) {
+      // Если ни данных, ни ID нет — выкидываем на главную
+      navigate('/');
+    }
+  }, [id, deck, navigate]);
+
+  if (loading) return <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-brand-DEFAULT" size={48} /></div>;
+  if (!deck || !deck.cards || deck.cards.length === 0) return <div className="text-center mt-20">В этой колоде нет карточек.</div>;
+
+  const currentCard = deck.cards[currentCardIndex];
+
+  const handleNext = () => {
+    setIsFlipped(false);
+    if (currentCardIndex < deck.cards.length - 1) {
+      setCurrentCardIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    setIsFlipped(false);
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(prev => prev - 1);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center">
+      {/* Шапка */}
+      <div className="w-full flex items-center justify-between mb-8">
+        <button 
+          onClick={() => navigate(isPreview ? '/' : '/my-decks')} 
+          className="bg-gray-100 text-gray-600 px-4 py-2 rounded-full hover:bg-gray-200 transition text-sm font-medium"
+        >
+          {isPreview ? 'На главную' : 'Назад к списку'}
+        </button>
+        
+        <div className="text-center">
+          <h2 className="text-lg font-bold text-gray-700 truncate max-w-[200px] sm:max-w-md">{deck.title || "Новая колода"}</h2>
+          <p className="text-xs text-brand-dark font-medium">
+            Карточка {currentCardIndex + 1} из {deck.cards.length}
+          </p>
+        </div>
+
+        {/* Если это превью, показываем кнопку "Сохранить" (которая ведет к регистрации) */}
+        {isPreview ? (
+          <Link 
+            to="/register" 
+            className="flex items-center gap-2 bg-brand-dark text-white px-4 py-2 rounded-full hover:bg-brand-dark/90 transition text-sm shadow-md animate-pulse"
+          >
+            <Save size={16} /> Сохранить
+          </Link>
+        ) : (
+           <div className="w-[80px]"></div> // Пустой блок для центровки
+        )}
+      </div>
+
+      {/* КАРТОЧКА (Flip logic) */}
+      <div 
+        className="relative w-full max-w-2xl aspect-[16/9] cursor-pointer perspective-1000 group"
+        onClick={() => setIsFlipped(!isFlipped)}
+      >
+        <div className={`
+          w-full h-full transition-all duration-500 preserve-3d relative rounded-3xl shadow-xl
+          ${isFlipped ? 'rotate-y-180' : ''}
+        `}>
+          {/* Лицевая сторона (Вопрос) */}
+          <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-[#A8D5BA] to-[#8BC4A0] rounded-3xl flex flex-col items-center justify-center p-8 text-center text-white border border-[#97C3AA]">
+            <span className="absolute top-6 left-6 text-white/80 text-xs uppercase tracking-wider font-bold bg-white/20 px-3 py-1 rounded-full">Вопрос</span>
+            <p className="text-xl md:text-3xl font-semibold leading-relaxed drop-shadow-sm select-none">
+              {currentCard.question}
+            </p>
+            <div className="absolute bottom-6 text-white/70 text-sm flex items-center gap-2 bg-black/10 px-4 py-2 rounded-full backdrop-blur-sm">
+              <RotateCw size={14} /> Нажмите, чтобы перевернуть
+            </div>
+          </div>
+
+          {/* Обратная сторона (Ответ) */}
+          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-white border-2 border-brand-DEFAULT rounded-3xl flex flex-col items-center justify-center p-8 text-center text-gray-800 shadow-inner">
+             <span className="absolute top-6 left-6 text-brand-DEFAULT text-xs uppercase tracking-wider font-bold bg-brand-light px-3 py-1 rounded-full">Ответ</span>
+             <div className="max-h-full overflow-y-auto w-full flex items-center justify-center">
+               <p className="text-lg md:text-2xl leading-relaxed text-gray-700 font-medium">
+                 {currentCard.answer}
+               </p>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Кнопки навигации */}
+      <div className="flex gap-4 md:gap-8 mt-10">
+        <button 
+          onClick={handlePrev}
+          disabled={currentCardIndex === 0}
+          className={`
+            p-4 rounded-full transition shadow-sm border
+            ${currentCardIndex === 0 
+              ? 'bg-gray-100 text-gray-300 border-transparent cursor-not-allowed' 
+              : 'bg-white text-gray-600 border-gray-200 hover:border-brand-DEFAULT hover:text-brand-DEFAULT'}
+          `}
+        >
+          <ArrowLeft size={24} />
+        </button>
+
+        <button 
+          onClick={handleNext}
+          disabled={currentCardIndex === deck.cards.length - 1}
+          className={`
+            p-4 rounded-full transition shadow-sm border
+            ${currentCardIndex === deck.cards.length - 1
+              ? 'bg-gray-100 text-gray-300 border-transparent cursor-not-allowed' 
+              : 'bg-white text-gray-600 border-gray-200 hover:border-brand-DEFAULT hover:text-brand-DEFAULT'}
+          `}
+        >
+          <ArrowRight size={24} />
+        </button>
+      </div>
+
+      {isPreview && (
+        <p className="mt-8 text-gray-400 text-sm max-w-md text-center">
+          Это режим предпросмотра. <Link to="/register" className="text-brand-DEFAULT underline hover:text-brand-dark">Зарегистрируйтесь</Link>, чтобы сохранить эту колоду навсегда.
+        </p>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/Upload.jsx">
+import { useState, useRef } from 'react';
+import { Upload as UploadIcon, FileText, CheckCircle, Loader2 } from 'lucide-react';
+import api from '../api';
+import { useNavigate } from 'react-router-dom';
+
+export default function Upload() {
+  const [dragActive, setDragActive] = useState(false);
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Обработка перетаскивания
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  // Обработка сброса файла
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      validateAndSetFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  // Обработка выбора через диалог
+  const handleChange = (e) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      validateAndSetFile(e.target.files[0]);
+    }
+  };
+
+  const validateAndSetFile = (selectedFile) => {
+    if (selectedFile.type !== 'application/pdf') {
+      setError('Пожалуйста, загрузите файл формата PDF');
+      return;
+    }
+    setError('');
+    setFile(selectedFile);
+  };
+
+  // Отправка на сервер
+  const handleSubmit = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await api.post('/api/upload/pdf', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const token = localStorage.getItem('token');
+      const generatedDeck = response.data;
+
+      if (token) {
+        // Если вошел: идем в редактор (как раньше)
+        navigate('/deck/edit', { state: { deck: generatedDeck } });
+      } else {
+        // Если ГОСТЬ: идем сразу учить (Preview Mode)
+        // Добавляем флаг preview: true, чтобы скрыть лишние кнопки
+        navigate('/study/preview', { state: { deck: generatedDeck, preview: true } });
+      }
+      
+    } catch (err) {
+      console.error(err);
+      setError('Ошибка при обработке файла. Попробуйте еще раз.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Создайте учебные шпаргалки из PDF за считанные секунды
+        </h1>
+      </div>
+
+      <div 
+        className={`
+          relative border-2 border-dashed rounded-3xl p-12 text-center transition-all duration-200 ease-in-out
+          ${dragActive ? 'border-brand-dark bg-brand-light' : 'border-gray-300 bg-brand-light/50'}
+          ${file ? 'bg-white border-brand-DEFAULT' : ''}
+        `}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf"
+          onChange={handleChange}
+        />
+
+        {!file ? (
+          <div className="flex flex-col items-center justify-center py-8">
+             {/* Заглушка, если файл не выбран */}
+            <p className="text-gray-600 mb-6 font-medium">Перетащите ваш файл сюда</p>
+            <p className="text-gray-500 mb-6 text-sm">Или</p>
+            <button
+              onClick={() => inputRef.current.click()}
+              className="px-8 py-3 bg-brand-dark/20 hover:bg-brand-dark/30 text-brand-dark font-semibold rounded-full transition"
+            >
+              Выберите файл
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-4">
+            {/* Если файл выбран */}
+            <div className="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-4 text-brand-dark">
+              <FileText size={32} />
+            </div>
+            <p className="text-xl font-medium text-gray-800 mb-2">{file.name}</p>
+            <p className="text-sm text-gray-500 mb-6">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+            
+            <div className="flex gap-4">
+              <button
+                onClick={() => setFile(null)}
+                className="px-6 py-2 text-gray-500 hover:text-red-500 font-medium transition"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="px-8 py-2 bg-brand-dark text-white font-semibold rounded-full hover:bg-brand-dark/90 transition flex items-center gap-2"
+              >
+                {loading && <Loader2 className="animate-spin" size={20} />}
+                {loading ? 'Генерируем...' : 'Создать карточки'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Оверлей для Drag-and-Drop */}
+        {dragActive && (
+          <div className="absolute inset-0 w-full h-full bg-brand-light/90 rounded-3xl flex items-center justify-center z-10">
+            <p className="text-2xl font-bold text-brand-dark">Отпустите файл здесь</p>
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <div className="mt-6 p-4 bg-red-50 text-red-600 rounded-xl flex items-center justify-center gap-2">
+           <span>⚠️</span> {error}
+        </div>
+      )}
+
+      <p className="text-center text-gray-400 text-xs mt-8">
+        Для сохранения и управления вашими карточками необходимо войти в систему
+      </p>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/vite.config.js">
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+</file>
+
+<file path="README.md">
+
+</file>
+
+<file path="backend/app/db.py">
+from app.core.security import get_password_hash
+
+# Имитация базы данных в памяти
+
+# Добавляем поле role и создаем админа по умолчанию
+# admin@example.com / admin123
+fake_users_db = {
+    "admin@example.com": {
+        "id": "0",
+        "email": "admin@example.com",
+        "hashed_password": get_password_hash("admin123"),
+        "role": "admin"
+    }
+}
+
+# Добавляем owner_id к колодам, чтобы знать, чьи они
+fake_decks_db = [
+    {
+        "id": "1",
+        "owner_id": "0", # Принадлежит админу
+        "title": "История России",
+        "description": "Даты и события 19 века",
+        "cards": [
+            {"id": "c1", "question": "Дата отмены крепостного права?", "answer": "1861 год"},
+            {"id": "c2", "question": "Кто правил после Николая I?", "answer": "Александр II"}
+        ]
+    },
+    {
+        "id": "2",
+        "owner_id": "999", # Принадлежит кому-то другому
+        "title": "Английские фразы",
+        "description": "Базовый уровень",
+        "cards": []
+    }
+]
+
+blacklist_db = set()
+</file>
+
+<file path="backend/app/routers/decks.py">
+from fastapi import APIRouter, HTTPException, Depends, status
+from typing import List
+from app.schemas import Deck, DeckCreate, Card
+from app.db import fake_decks_db
+from app.routers.auth import get_current_user
+import uuid
+
+router = APIRouter()
+
+@router.get("/", response_model=List[Deck])
+async def get_decks(current_user: dict = Depends(get_current_user)):
+    """
+    Получить колоды.
+    Админ видит все. Обычный юзер - только свои.
+    """
+    if current_user["role"] == "admin":
+        return list(fake_decks_db)
+    
+    # Фильтруем колоды по owner_id
+    user_decks = [d for d in fake_decks_db if d.get("owner_id") == current_user["id"]]
+    return user_decks
+
+@router.get("/{deck_id}", response_model=Deck)
+async def get_deck(deck_id: str, current_user: dict = Depends(get_current_user)):
+    """Получить одну колоду по ID с проверкой доступа"""
+    target_deck = None
+    for deck in fake_decks_db:
+        if deck["id"] == deck_id:
+            target_deck = deck
+            break
+    
+    if not target_deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
+        
+    # Проверка прав: Владелец или Админ
+    if target_deck.get("owner_id") != current_user["id"] and current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="You do not have permission to view this deck")
+
+    return target_deck
+
+@router.post("/", response_model=Deck)
+async def create_deck(deck_data: DeckCreate, current_user: dict = Depends(get_current_user)):
+    """Создать новую колоду"""
+    
+    new_deck_id = str(uuid.uuid4())
+    
+    processed_cards = []
+    for card_data in deck_data.cards:
+        processed_cards.append({
+            "id": str(uuid.uuid4()),
+            "question": card_data.question,
+            "answer": card_data.answer
+        })
+    
+    new_deck = {
+        "id": new_deck_id,
+        "owner_id": current_user["id"], # Привязываем к текущему пользователю
+        "title": deck_data.title,
+        "description": deck_data.description,
+        "cards": processed_cards
+    }
+    
+    fake_decks_db.append(new_deck)
+    return new_deck
+
+@router.delete("/{deck_id}", status_code=204)
+async def delete_deck(deck_id: str, current_user: dict = Depends(get_current_user)):
+    """Удалить колоду (RBAC: Owner or Admin)"""
+    global fake_decks_db
+    
+    # Ищем колоду
+    deck_to_delete = next((d for d in fake_decks_db if d["id"] == deck_id), None)
+    
+    if not deck_to_delete:
+        raise HTTPException(status_code=404, detail="Deck not found")
+    
+    # ПРОВЕРКА ПРАВ
+    is_owner = deck_to_delete.get("owner_id") == current_user["id"]
+    is_admin = current_user["role"] == "admin"
+    
+    if not is_owner and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Not enough permissions to delete this deck"
+        )
+
+    # Удаление
+    fake_decks_db = [d for d in fake_decks_db if d["id"] != deck_id]
+    return # 204 No Content
+</file>
+
+<file path="backend/app/routers/files.py">
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from pypdf import PdfReader
+from io import BytesIO
+from app.schemas import Deck, Card
+from app.core.ai import generate_flashcards_from_text
+import uuid
+
+router = APIRouter()
+
+@router.post("/upload/pdf", response_model=Deck, tags=["Files & AI"])
+async def upload_pdf(file: UploadFile = File(...)):
+    """
+    Принимает PDF, извлекает текст, генерирует карточки через AI
+    и возвращает готовую колоду (превью).
+    """
+    if not file.filename.endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="File must be a PDF")
+    
+    # 1. Читаем PDF из памяти
+    try:
+        content = await file.read()
+        pdf_file = BytesIO(content)
+        reader = PdfReader(pdf_file)
+        
+        extracted_text = ""
+        for page in reader.pages:
+            extracted_text += page.extract_text() or ""
+            
+        if len(extracted_text) < 50:
+            raise HTTPException(status_code=400, detail="PDF is empty or not readable (scanned image?)")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading PDF: {str(e)}")
+
+    # 2. Отправляем текст в AI (ML Magic)
+    ai_cards_data = await generate_flashcards_from_text(extracted_text)
+    
+    if not ai_cards_data:
+        raise HTTPException(status_code=500, detail="AI failed to generate cards")
+
+    # 3. Формируем объект колоды
+    # Превращаем сырые dict в объекты Card
+    cards_objects = []
+    for card in ai_cards_data:
+        cards_objects.append(
+            Card(id=str(uuid.uuid4()), question=card["question"], answer=card["answer"])
+        )
+
+    new_deck = Deck(
+        id=str(uuid.uuid4()),
+        title=f"Конспект: {file.filename}",
+        description="Сгенерировано AI",
+        cards=cards_objects
+    )
+    
+    # Важно: Мы пока возвращаем колоду, но НЕ сохраняем её в базу автоматически.
+    # Frontend должен показать превью, и если юзер нажмет "Сохранить", 
+    # тогда фронт отправит данные на POST /api/decks/
+    
+    return new_deck
+</file>
+
+<file path="backend/app/schemas.py">
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
+
+# --- CARDS ---
+class CardBase(BaseModel):
+    question: str
+    answer: str
+
+class CardCreate(CardBase):
+    pass
+
+class Card(CardBase):
+    id: str
+    
+# --- DECKS ---
+class DeckBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+
+class DeckCreate(DeckBase):
+    cards: List[CardCreate] = []
+
+class Deck(DeckBase):
+    id: str
+    owner_id: str # Добавили поле владельца
+    cards: List[Card] = []
+
+# --- USERS ---
+class UserAuth(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserOut(BaseModel):
+    id: str
+    email: EmailStr
+    role: str = "user" # Добавили поле роли
+
+class TokenSchema(BaseModel):
+    access_token: str
+    token_type: str
+    role: str # Возвращаем роль сразу при логине для удобства фронтенда
+</file>
+
+<file path="backend/main.py">
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers import system, decks, files, auth
+
+app = FastAPI(
+    title="Flashcards AI Backend",
+    description="API для сервиса генерации учебных карточек из PDF",
+    version="1.0.0"
+)
+
+# Настройка CORS (чтобы ваш Frontend мог обращаться к этому серверу)
+origins = [
+    "http://localhost:5173",  # <--- ВАЖНО: Стандартный порт Vite
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins, # Используем обновленный список
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# Подключение роутеров
+app.include_router(system.router)
+app.include_router(files.router, prefix="/api") # Эндпоинты для файлов
+app.include_router(decks.router, prefix="/api/decks") # Эндпоинты для колод
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+
+if __name__ == "__main__":
+    import uvicorn
+    # Запуск сервера
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+</file>
+
+<file path="frontend/index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="frontend/package.json">
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.11.0",
+    "tailwind-merge": "^3.4.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.23",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "vite": "^7.2.4"
+  }
+}
+</file>
+
+<file path="frontend/src/App.jsx">
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register'; 
+import Upload from './pages/Upload';
+import DeckEdit from './pages/DeckEdit';
+import MyDecks from './pages/MyDecks';
+import StudyMode from './pages/StudyMode';
+import Header from './components/Header'; 
+import PrivateRoute from './components/PrivateRoute';
+import AdminUsers from './pages/AdminUsers'; // Импорт новой страницы
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-white">
+        <Header />
+        
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          <Route path="/" element={<Upload />} />
+          <Route path="/study/preview" element={<StudyMode />} />
+          
+          {/* Общие приватные маршруты (User + Admin) */}
+          <Route element={<PrivateRoute allowedRoles={['user', 'admin']} />}>
+            <Route path="/my-decks" element={<MyDecks />} />
+            <Route path="/deck/edit" element={<DeckEdit />} />
+            <Route path="/deck/:id/study" element={<StudyMode />} />
+          </Route>
+
+          {/* ТОЛЬКО ДЛЯ АДМИНОВ */}
+          <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+             <Route path="/admin/users" element={<AdminUsers />} />
+          </Route>
+
+          <Route path="*" element={<div className="text-center mt-20">Страница не найдена. <a href="/" className="text-blue-500">На главную</a></div>} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+</file>
+
+<file path="frontend/src/index.css">
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply text-brand-text bg-gray-50;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+</file>
+
+<file path="frontend/tailwind.config.js">
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          light: '#E6F4EA', // Светло-зеленый фон
+          DEFAULT: '#A8D5BA', // Основной зеленый
+          dark: '#6B8E78', // Текст и активные элементы
+          text: '#2D3748', // Основной текст
+        }
+      }
+    },
+  },
+  plugins: [],
+}
+</file>
+
+<file path=".env.example">
+
+</file>
+
+<file path="backend/requirements.txt">
+fastapi
+uvicorn
+python-multipart
+pydantic
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==3.2.2
+email-validator
+slowapi
+pypdf
+python-dotenv
+google-genai
+openai
+</file>
+
+</files>

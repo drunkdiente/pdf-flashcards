@@ -7,25 +7,13 @@ from app.core.security import (
     create_refresh_token, decode_token
 )
 from app.db import fake_users_db, blacklist_db 
-from typing import Optional
+from typing import Optional, List
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from app.schemas import UserAuth, UserOut, TokenSchema # Импортируем обновленные схемы
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
-
-# --- Schemas ---
-class UserAuth(BaseModel):
-    email: EmailStr
-    password: str
-
-class UserOut(BaseModel):
-    id: str
-    email: EmailStr
-    
-class TokenSchema(BaseModel):
-    access_token: str
-    token_type: str
 
 # --- Middleware / Dependency ---
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -45,11 +33,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         )
         
     user_email = payload.get("sub")
-    user = fake_users_db.get(user_email) # Имитация поиска в БД
+    user = fake_users_db.get(user_email)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
         
     return user
+
+async def get_current_admin(current_user: dict = Depends(get_current_user)):
+    """Проверка прав администратора (RBAC)"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Not enough privileges. Admin role required."
+        )
+    return current_user
 
 # --- Endpoints ---
 
@@ -62,7 +59,8 @@ async def register(user_data: UserAuth):
     fake_users_db[user_data.email] = {
         "id": str(len(fake_users_db) + 1),
         "email": user_data.email,
-        "hashed_password": hashed_pw
+        "hashed_password": hashed_pw,
+        "role": "user" # По умолчанию роль - пользователь
     }
     return {"message": "User created successfully"}
 
@@ -74,7 +72,6 @@ async def login(request: Request, response: Response, form_data: OAuth2PasswordR
     if not user or not verify_password(form_data.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     
-    # Генерация токенов (используем form_data.username как sub)
     access_token = create_access_token(subject=user["email"])
     refresh_token = create_refresh_token(subject=user["email"])
     
@@ -87,7 +84,12 @@ async def login(request: Request, response: Response, form_data: OAuth2PasswordR
         max_age=7 * 24 * 60 * 60
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Возвращаем роль, чтобы фронтенд мог адаптировать интерфейс
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "role": user.get("role", "user")
+    }
 
 @router.post("/refresh", response_model=TokenSchema)
 async def refresh_token(request: Request, response: Response):
@@ -99,16 +101,34 @@ async def refresh_token(request: Request, response: Response):
     if not payload or payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid refresh token")
         
-    new_access_token = create_access_token(subject=payload.get("sub"))
-    return {"access_token": new_access_token, "token_type": "bearer"}
+    user_email = payload.get("sub")
+    user = fake_users_db.get(user_email)
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    new_access_token = create_access_token(subject=user_email)
+    
+    return {
+        "access_token": new_access_token, 
+        "token_type": "bearer",
+        "role": user.get("role", "user")
+    }
 
 @router.post("/logout")
 async def logout(response: Response, token: str = Depends(oauth2_scheme)):
-    # Инвалидация токенов
-    blacklist_db.add(token) # Добавляем access token в черный список
-    response.delete_cookie("refresh_token") # Удаляем куку
+    blacklist_db.add(token)
+    response.delete_cookie("refresh_token")
     return {"message": "Logged out successfully"}
 
 @router.get("/me", response_model=UserOut)
 async def read_users_me(current_user: dict = Depends(get_current_user)):
     return current_user
+
+# --- ADMIN ENDPOINTS ---
+@router.get("/users", response_model=List[UserOut])
+async def read_all_users(admin_user: dict = Depends(get_current_admin)):
+    """
+    Только для администраторов: получить список всех пользователей.
+    """
+    # Преобразуем словарь users_db в список
+    return list(fake_users_db.values())

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
 # --- CARDS ---
@@ -18,9 +18,24 @@ class DeckBase(BaseModel):
     description: Optional[str] = None
 
 class DeckCreate(DeckBase):
-    # ВАЖНО: Разрешаем принимать список карточек при создании
     cards: List[CardCreate] = []
 
 class Deck(DeckBase):
     id: str
+    owner_id: str # Добавили поле владельца
     cards: List[Card] = []
+
+# --- USERS ---
+class UserAuth(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserOut(BaseModel):
+    id: str
+    email: EmailStr
+    role: str = "user" # Добавили поле роли
+
+class TokenSchema(BaseModel):
+    access_token: str
+    token_type: str
+    role: str # Возвращаем роль сразу при логине для удобства фронтенда
