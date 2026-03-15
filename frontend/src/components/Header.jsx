@@ -1,15 +1,15 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, LogOut, User, Shield } from 'lucide-react';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation(); 
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role'); // Получаем роль
+  const { user, logout } = useContext(AuthContext);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role'); // Очищаем роль
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -25,10 +25,10 @@ export default function Header() {
 
       {/* Навигация */}
       <div className="flex items-center gap-4">
-        {token ? (
+        {user ? (
           <>
              {/* ССЫЛКА ДЛЯ АДМИНА */}
-            {role === 'admin' && (
+            {user.role === 'admin' && (
                 <Link to="/admin/users" className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium transition text-sm bg-purple-50 px-3 py-1.5 rounded-full">
                     <Shield size={16} /> Админка
                 </Link>
