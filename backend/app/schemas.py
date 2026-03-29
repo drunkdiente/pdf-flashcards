@@ -12,10 +12,14 @@ class CardCreate(CardBase):
 class Card(CardBase):
     id: str
     
+import datetime
+
 # --- DECKS ---
 class DeckBase(BaseModel):
     title: str
     description: Optional[str] = None
+    file_key: Optional[str] = None
+    file_name: Optional[str] = None
 
 class DeckCreate(DeckBase):
     cards: List[CardCreate] = []
@@ -24,6 +28,7 @@ class Deck(DeckBase):
     id: str
     owner_id: str # Добавили поле владельца
     cards: List[Card] = []
+    created_at: Optional[datetime.datetime] = None
 
 # --- USERS ---
 class UserAuth(BaseModel):

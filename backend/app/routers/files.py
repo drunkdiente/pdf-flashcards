@@ -3,15 +3,17 @@ from pypdf import PdfReader
 from io import BytesIO
 from app.schemas import Deck, Card
 from app.core.ai import generate_flashcards_from_text
+from app.services.storage import storage_service
 import uuid
+import datetime
 
 router = APIRouter()
 
 @router.post("/upload/pdf", response_model=Deck, tags=["Files & AI"])
 async def upload_pdf(file: UploadFile = File(...)):
     """
-    Принимает PDF, извлекает текст, генерирует карточки через AI
-    и возвращает готовую колоду (превью).
+    Принимает PDF, извлекает текст, генерирует карточки через AI,
+    сохраняет файл в S3, и возвращает готовую колоду (превью).
     """
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="File must be a PDF")
@@ -38,7 +40,10 @@ async def upload_pdf(file: UploadFile = File(...)):
     if not ai_cards_data:
         raise HTTPException(status_code=500, detail="AI failed to generate cards")
 
-    # 3. Формируем объект колоды
+    # 3. Сохраняем файл в S3
+    file_key = storage_service.upload_file(content, file.filename, content_type="application/pdf")
+
+    # 4. Формируем объект колоды
     # Превращаем сырые dict в объекты Card
     cards_objects = []
     for card in ai_cards_data:
@@ -51,7 +56,10 @@ async def upload_pdf(file: UploadFile = File(...)):
         owner_id="temp", # Добавлено недостающее поле-заглушка для прохождения валидации Pydantic
         title=f"Конспект: {file.filename}",
         description="Сгенерировано AI",
-        cards=cards_objects
+        cards=cards_objects,
+        file_key=file_key,
+        file_name=file.filename,
+        created_at=datetime.datetime.utcnow()
     )
     
     # Важно: Мы пока возвращаем колоду, но НЕ сохраняем её в базу автоматически.

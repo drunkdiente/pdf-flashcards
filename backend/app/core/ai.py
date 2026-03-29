@@ -4,7 +4,7 @@ from typing import List, Dict
 
 # Настраиваем клиент на локальный адрес Ollama
 client = AsyncOpenAI(
-    base_url="http://127.0.0.1:11434/v1",
+    base_url="http://localhost:11434/v1",
     api_key="ollama"
 )
 

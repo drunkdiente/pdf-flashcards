@@ -14,12 +14,18 @@ fake_users_db = {
 }
 
 # Добавляем owner_id к колодам, чтобы знать, чьи они
+import datetime
+
+# Добавляем owner_id к колодам, чтобы знать, чьи они
 fake_decks_db = [
     {
         "id": "1",
         "owner_id": "0", # Принадлежит админу
         "title": "История России",
         "description": "Даты и события 19 века",
+        "file_key": None,
+        "file_name": None,
+        "created_at": datetime.datetime(2023, 10, 1, 12, 0, 0),
         "cards": [
             {"id": "c1", "question": "Дата отмены крепостного права?", "answer": "1861 год"},
             {"id": "c2", "question": "Кто правил после Николая I?", "answer": "Александр II"}
@@ -30,6 +36,9 @@ fake_decks_db = [
         "owner_id": "999", # Принадлежит кому-то другому
         "title": "Английские фразы",
         "description": "Базовый уровень",
+        "file_key": None,
+        "file_name": None,
+        "created_at": datetime.datetime(2023, 10, 5, 12, 0, 0),
         "cards": []
     }
 ]

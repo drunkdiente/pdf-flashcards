@@ -11,3 +11,4 @@ pypdf
 python-dotenv
 google-genai
 openai
+boto3
