@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Save, Plus, Trash2 } from 'lucide-react';
 import api from '../api';
 
 export default function DeckEdit() {
   const { state } = useLocation();
   const navigate = useNavigate();
   
-  // Состояние колоды
   const [deck, setDeck] = useState(state?.deck || null);
-  // Индекс выбранной карточки для редактирования
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Если пришли на страницу без данных (например, обновили страницу), возвращаем назад
+  // Состояния для словаря
+  const [searchWord, setSearchWord] = useState('');
+  const [dictResult, setDictResult] = useState(null);
+  const [dictLoading, setDictLoading] = useState(false);
+  const [dictError, setDictError] = useState('');
+
   useEffect(() => {
     if (!state?.deck) {
       navigate('/');
@@ -24,22 +27,18 @@ export default function DeckEdit() {
 
   const currentCard = deck.cards[selectedIndex];
 
-  // Обновление текста вопроса/ответа
   const updateCard = (field, value) => {
     const updatedCards = [...deck.cards];
     updatedCards[selectedIndex] = { ...currentCard, [field]: value };
     setDeck({ ...deck, cards: updatedCards });
   };
 
-  // Сохранение колоды в базу данных
   const handleSaveDeck = async () => {
     try {
       setLoading(true);
-      // Если у колоды уже есть ID в базе, делаем PUT, если новая - POST
-      // Но пока API у нас простой, предположим создание новой
       await api.post('/api/decks/', deck);
       alert('Колода успешно сохранена!');
-      navigate('/my-decks'); // Позже создадим эту страницу
+      navigate('/my-decks');
     } catch (error) {
       console.error(error);
       alert('Ошибка при сохранении');
@@ -48,9 +47,26 @@ export default function DeckEdit() {
     }
   };
 
+  const handleSearchWord = async (e) => {
+    e.preventDefault();
+    if (!searchWord.trim()) return;
+    
+    setDictLoading(true);
+    setDictError('');
+    setDictResult(null);
+
+    try {
+      const response = await api.get(`/api/dictionary/define?word=${searchWord.trim()}`);
+      setDictResult(response.data);
+    } catch (err) {
+      setDictError(err.response?.data?.detail || 'Не удалось связаться со словарем');
+    } finally {
+      setDictLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Верхняя панель */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="px-4 py-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition text-sm">
@@ -69,8 +85,45 @@ export default function DeckEdit() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        {/* ЛЕВАЯ КОЛОНКА: Список карточек */}
+        {/* ЛЕВАЯ КОЛОНКА */}
         <div className="md:col-span-1 space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+          
+          {/* Блок словаря (Интеграция стороннего API) */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm mb-6">
+            <h3 className="font-semibold text-gray-700 mb-3 text-sm">Быстрый словарь (Только русские и английские слова)</h3>
+            <form onSubmit={handleSearchWord} className="flex gap-2 mb-3">
+              <input 
+                type="text" 
+                value={searchWord}
+                onChange={(e) => setSearchWord(e.target.value)}
+                placeholder="Введите слово..."
+                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-brand-DEFAULT"
+              />
+              <button 
+                type="submit" 
+                disabled={dictLoading}
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition disabled:opacity-50"
+              >
+                Найти
+              </button>
+            </form>
+
+            {dictLoading && <p className="text-sm text-gray-500 animate-pulse">Ищем определение...</p>}
+            {dictError && <p className="text-sm text-red-500">{dictError}</p>}
+            {dictResult && (
+              <div className="text-sm bg-brand-light/30 p-3 rounded-lg border border-brand-light">
+                {dictResult.found ? (
+                  <>
+                    <span className="font-bold block mb-1">{dictResult.word}</span>
+                    <span className="text-gray-700">{dictResult.definition}</span>
+                  </>
+                ) : (
+                  <span className="text-gray-500">Слово «{dictResult.word}» не найдено в словаре.</span>
+                )}
+              </div>
+            )}
+          </div>
+
           <h3 className="font-semibold text-gray-500 mb-2">Все карточки ({deck.cards.length})</h3>
           
           {deck.cards.map((card, idx) => (

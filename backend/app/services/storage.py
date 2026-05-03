@@ -35,8 +35,7 @@ class S3StorageService:
 
     def upload_file(self, content: bytes, filename: str, content_type: str = "application/pdf") -> str:
         self.check_configuration()
-        
-        # Generate a unique key for the file
+
         file_ext = filename.split(".")[-1] if "." in filename else "pdf"
         unique_filename = f"{uuid.uuid4()}.{file_ext}"
         s3_key = f"uploads/{unique_filename}"
@@ -77,7 +76,5 @@ class S3StorageService:
             )
         except ClientError as e:
             print(f"S3 Delete Error: {e}")
-            # We don't raise here usually to allow DB deletion to proceed even if S3 fails,
-            # but in a production environment we might queue it for retry.
 
 storage_service = S3StorageService()

@@ -12,3 +12,4 @@ python-dotenv
 google-genai
 openai
 boto3
+httpx
