@@ -112,8 +112,6 @@ async def create_deck(deck_data: DeckCreate, current_user: dict = Depends(get_cu
 @router.delete("/{deck_id}", status_code=204)
 async def delete_deck(deck_id: str, current_user: dict = Depends(get_current_user)):
     """Удалить колоду (RBAC: Owner or Admin)"""
-    global fake_decks_db
-    
     deck_to_delete = next((d for d in fake_decks_db if d["id"] == deck_id), None)
     
     if not deck_to_delete:
