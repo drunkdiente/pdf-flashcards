@@ -1,11 +1,10 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, LogOut, User, Shield } from 'lucide-react';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Header() {
   const navigate = useNavigate();
-  const location = useLocation(); 
   const { user, logout } = useContext(AuthContext);
 
   const handleLogout = async () => {

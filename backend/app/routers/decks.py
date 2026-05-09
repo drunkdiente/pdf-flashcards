@@ -136,6 +136,6 @@ async def delete_deck(deck_id: str, current_user: dict = Depends(get_current_use
         except Exception as e:
             print("Failed to delete file from obj storage:", e)
 
-    # Удаление
-    fake_decks_db = [d for d in fake_decks_db if d["id"] != deck_id]
+    # Удаление (модифицируем список на месте, чтобы сохранить ссылку в модуле db)
+    fake_decks_db[:] = [d for d in fake_decks_db if d["id"] != deck_id]
     return # 204 No Content

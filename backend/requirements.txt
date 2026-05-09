@@ -13,3 +13,9 @@ google-genai
 openai
 boto3
 httpx
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+httpx
